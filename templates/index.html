@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestor de imágenes</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="contenedor">
+        <header class="encabezado">
+            <p class="sobretitulo">Cuaderno digital</p>
+            <h1 class="titulo">Mi gestor de <em>imágenes</em></h1>
+            <hr class="regla">
+        </header>
+
+        <form
+            class="panel-subida"
+            action="/subir"
+            method="post"
+            enctype="multipart/form-data"
+        >
+            <span class="rotulo">Selecciona una imagen</span>
+            <input
+                type="file"
+                id="imagen"
+                name="imagen"
+                accept="image/*"
+                required
+            >
+            <label for="imagen" class="etiqueta-archivo">Elegir archivo</label>
+            <button class="boton boton-primario" type="submit">Subir</button>
+        </form>
+
+        {% if mensaje %}
+            <p class="mensaje">{{ mensaje }}</p>
+        {% endif %}
+
+        <section class="seccion-galeria">
+            <h2 class="titulo-seccion">Mis imágenes</h2>
+
+            {% if imagenes %}
+                <div class="galeria">
+                    {% for nombre in imagenes %}
+                        <div class="tarjeta">
+                            <a class="marco" href="{{ url_for('ver_imagen', nombre=nombre) }}" target="_blank" rel="noopener">
+                                <img
+                                    src="{{ url_for('ver_imagen', nombre=nombre) }}"
+                                    alt="Imagen guardada {{ nombre }}"
+                                    loading="lazy"
+                                >
+                                <span class="adorno" aria-hidden="true"></span>
+                            </a>
+                            <div class="tarjeta-info">
+                                <span class="tarjeta-nombre" title="{{ nombre }}">{{ nombre }}</span>
+                                <form
+                                    action="{{ url_for('eliminar_imagen', nombre=nombre) }}"
+                                    method="post"
+                                    onsubmit="return confirm('¿Seguro que quieres eliminar esta imagen?');"
+                                >
+                                    <button class="boton-eliminar" type="submit">Eliminar</button>
+                                </form>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="vacio">Todavía no has subido imágenes.</p>
+            {% endif %}
+        </section>
+    </div>
+</body>
+</html>
