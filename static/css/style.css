@@ -230,9 +230,12 @@ body {
 .tarjeta .marco {
     position: relative;
     overflow: hidden;
-    border-radius: 4px;
+    border-radius: 8px;
     background: var(--papel-sombra);
-    box-shadow: var(--sombra);
+    box-shadow:
+        inset 0 0 0 1px rgba(27, 24, 19, 0.1),
+        inset 0 1px 2px rgba(27, 24, 19, 0.05),
+        var(--sombra);
     transition: box-shadow 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
@@ -241,13 +244,17 @@ body {
     width: 100%;
     aspect-ratio: 1;
     object-fit: cover;
+    border-radius: 8px;
     filter: saturate(0.92) contrast(1.02);
     transform: scale(1.01);
     transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1), filter 0.5s ease;
 }
 
 .tarjeta:hover .marco {
-    box-shadow: var(--sombra-lift);
+    box-shadow:
+        inset 0 0 0 1px rgba(27, 24, 19, 0.1),
+        inset 0 1px 2px rgba(27, 24, 19, 0.05),
+        var(--sombra-lift);
     transform: translateY(-4px);
 }
 
@@ -261,7 +268,7 @@ body {
     inset: 0;
     pointer-events: none;
     box-shadow: inset 0 0 0 1px rgba(250, 246, 238, 0.28);
-    border-radius: 4px;
+    border-radius: 8px;
     opacity: 0;
     transition: opacity 0.45s ease;
 }
