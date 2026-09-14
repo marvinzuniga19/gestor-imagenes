@@ -85,25 +85,47 @@ body {
 /* Panel de subida */
 .panel-subida {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 16px 22px;
+    flex-direction: column;
+    gap: 18px;
     padding: clamp(20px, 3.4vw, 30px) clamp(20px, 3.4vw, 34px);
     margin-bottom: clamp(48px, 8vh, 72px);
     background: rgba(250, 246, 238, 0.72);
     border: 1px dashed var(--oro);
-    border-radius: 4px;
+    border-radius: 6px;
     box-shadow: var(--sombra);
     backdrop-filter: blur(6px);
+    transition: border-color 0.25s ease, background-color 0.25s ease, box-shadow 0.25s ease;
 }
 
-.panel-subida .rotulo {
+.panel-subida.arrastrando {
+    border-color: var(--burdeos);
+    background: rgba(244, 238, 227, 0.96);
+    box-shadow: 0 0 0 4px rgba(185, 149, 90, 0.25), var(--sombra-lift);
+}
+
+.zona-seleccion {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px 22px;
+    width: 100%;
+}
+
+.zona-seleccion .rotulo {
     font-size: 0.72rem;
     font-weight: 700;
     letter-spacing: 0.28em;
     text-transform: uppercase;
     color: var(--tinta-suave);
     margin-right: auto;
+}
+
+.acciones-archivo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
 }
 
 .etiqueta-archivo {
@@ -146,7 +168,75 @@ body {
     outline-offset: 3px;
 }
 
-/* Cuando hay archivo elegido (sin JS: se mantiene transparente el valor) */
+/* Vista previa interactiva */
+.vista-previa {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--linea);
+    width: 100%;
+    animation: aparecer 0.3s ease both;
+}
+
+.vista-previa-marco {
+    width: 64px;
+    height: 64px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--papel-sombra);
+    border: 1px solid var(--linea);
+    flex-shrink: 0;
+}
+
+.vista-previa-marco img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.vista-previa-detalles {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.vista-previa-nombre {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--tinta);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.vista-previa-tamano {
+    font-size: 0.8rem;
+    color: var(--tinta-suave);
+}
+
+.boton-quitar {
+    background: none;
+    border: 0;
+    padding: 0;
+    margin-top: 4px;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--burdeos);
+    cursor: pointer;
+    text-align: left;
+    text-decoration: underline transparent;
+    transition: text-decoration-color 0.2s ease;
+}
+
+.boton-quitar:hover {
+    text-decoration-color: var(--burdeos);
+}
+
 .boton {
     display: inline-flex;
     align-items: center;
@@ -178,9 +268,16 @@ body {
 }
 
 /* Mensajes */
-.mensaje {
+.mensajes-flash {
     margin: -28px 0 44px;
-    padding: 12px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.mensaje {
+    margin: 0;
+    padding: 12px 22px;
     border-radius: 999px;
     font-size: 0.92rem;
     font-weight: 500;
@@ -188,12 +285,40 @@ body {
     background: var(--papel-luz);
     color: var(--tinta-suave);
     animation: aparecer 0.45s ease both;
+    display: flex;
+    align-items: center;
 }
 
 .mensaje::before {
     content: "✦";
     margin-right: 10px;
     color: var(--oro);
+}
+
+.mensaje-exito {
+    border-color: rgba(60, 110, 75, 0.28);
+    background: #f3f7f4;
+    color: #24462e;
+}
+
+.mensaje-exito::before {
+    content: "✓";
+    margin-right: 10px;
+    color: #386f49;
+    font-weight: 700;
+}
+
+.mensaje-error {
+    border-color: rgba(122, 46, 46, 0.28);
+    background: #faf2f2;
+    color: var(--burdeos-oscuro);
+}
+
+.mensaje-error::before {
+    content: "⚠";
+    margin-right: 10px;
+    color: var(--burdeos);
+    font-weight: 700;
 }
 
 /* Galería */
@@ -279,19 +404,35 @@ body {
 
 .tarjeta-info {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     justify-content: space-between;
     gap: 10px;
     padding: 12px 2px 0;
 }
 
+.tarjeta-texto {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    flex-grow: 1;
+}
+
 .tarjeta-nombre {
-    font-size: 0.82rem;
-    font-weight: 500;
-    color: var(--tinta-suave);
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--tinta);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+.tarjeta-meta {
+    font-size: 0.74rem;
+    color: var(--tinta-suave);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .boton-eliminar {

@@ -15,50 +15,81 @@
         </header>
 
         <form
+            id="form-subida"
             class="panel-subida"
             action="/subir"
             method="post"
             enctype="multipart/form-data"
         >
-            <span class="rotulo">Selecciona una imagen</span>
-            <input
-                type="file"
-                id="imagen"
-                name="imagen"
-                accept="image/*"
-                required
-            >
-            <label for="imagen" class="etiqueta-archivo">Elegir archivo</label>
-            <button class="boton boton-primario" type="submit">Subir</button>
+            <div class="zona-seleccion">
+                <span class="rotulo">Selecciona o arrastra una imagen</span>
+                <input
+                    type="file"
+                    id="imagen"
+                    name="imagen"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    required
+                >
+                <div class="acciones-archivo">
+                    <label for="imagen" class="etiqueta-archivo" id="etiqueta-archivo">Elegir archivo</label>
+                    <button class="boton boton-primario" type="submit" id="boton-subir">Subir</button>
+                </div>
+            </div>
+
+            <!-- Contenedor de vista previa interactiva -->
+            <div id="vista-previa" class="vista-previa" style="display: none;">
+                <div class="vista-previa-marco">
+                    <img id="vista-previa-img" src="" alt="Vista previa de imagen">
+                </div>
+                <div class="vista-previa-detalles">
+                    <span class="vista-previa-nombre" id="vista-previa-nombre"></span>
+                    <span class="vista-previa-tamano" id="vista-previa-tamano"></span>
+                    <button type="button" class="boton-quitar" id="boton-quitar" title="Descartar archivo seleccionado">✕ Descartar</button>
+                </div>
+            </div>
         </form>
 
-        {% if mensaje %}
-            <p class="mensaje">{{ mensaje }}</p>
-        {% endif %}
+        {% with mensajes = get_flashed_messages(with_categories=true) %}
+            {% if mensajes %}
+                <div class="mensajes-flash">
+                    {% for categoria, mensaje in mensajes %}
+                        <p class="mensaje mensaje-{{ categoria }}">{{ mensaje }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
 
         <section class="seccion-galeria">
             <h2 class="titulo-seccion">Mis imágenes</h2>
 
             {% if imagenes %}
                 <div class="galeria">
-                    {% for nombre in imagenes %}
+                    {% for img in imagenes %}
                         <div class="tarjeta">
-                            <a class="marco" href="{{ url_for('ver_imagen', nombre=nombre) }}" target="_blank" rel="noopener">
+                            <a class="marco" href="{{ url_for('ver_imagen', nombre=img.nombre_guardado) }}" target="_blank" rel="noopener" title="Ver original a tamaño completo">
                                 <img
-                                    src="{{ url_for('ver_imagen', nombre=nombre) }}"
-                                    alt="Imagen guardada {{ nombre }}"
+                                    src="{{ url_for('ver_miniatura', nombre=img.nombre_guardado) }}"
+                                    alt="{{ img.nombre_original }}"
                                     loading="lazy"
                                 >
                                 <span class="adorno" aria-hidden="true"></span>
                             </a>
                             <div class="tarjeta-info">
-                                <span class="tarjeta-nombre" title="{{ nombre }}">{{ nombre }}</span>
+                                <div class="tarjeta-texto">
+                                    <span class="tarjeta-nombre" title="{{ img.nombre_original }}">{{ img.nombre_original }}</span>
+                                    <span class="tarjeta-meta">
+                                        {{ img.tamano_bytes | tamano_legible }}
+                                        {% if img.ancho and img.alto %}
+                                            · {{ img.ancho }}×{{ img.alto }}
+                                        {% endif %}
+                                    </span>
+                                </div>
                                 <form
-                                    action="{{ url_for('eliminar_imagen', nombre=nombre) }}"
+                                    action="{{ url_for('eliminar_imagen', nombre=img.nombre_guardado) }}"
                                     method="post"
-                                    onsubmit="return confirm('¿Seguro que quieres eliminar esta imagen?');"
+                                    onsubmit="return confirm('¿Seguro que quieres eliminar «{{ img.nombre_original }}»?');"
                                 >
-                                    <button class="boton-eliminar" type="submit">Eliminar</button>
+                                    <button class="boton-eliminar" type="submit" title="Eliminar imagen">Eliminar</button>
                                 </form>
                             </div>
                         </div>
@@ -69,5 +100,89 @@
             {% endif %}
         </section>
     </div>
+
+    <script>
+        (function() {
+            const form = document.getElementById('form-subida');
+            const input = document.getElementById('imagen');
+            const label = document.getElementById('etiqueta-archivo');
+            const vistaPrevia = document.getElementById('vista-previa');
+            const vistaPreviaImg = document.getElementById('vista-previa-img');
+            const vistaPreviaNombre = document.getElementById('vista-previa-nombre');
+            const vistaPreviaTamano = document.getElementById('vista-previa-tamano');
+            const botonQuitar = document.getElementById('boton-quitar');
+
+            function formatearBytes(bytes) {
+                if (!bytes) return '0 B';
+                const k = 1024;
+                const unidades = ['B', 'KB', 'MB', 'GB'];
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + unidades[i];
+            }
+
+            function mostrarArchivo(archivo) {
+                if (!archivo || !archivo.type.startsWith('image/')) {
+                    ocultarVistaPrevia();
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    vistaPreviaImg.src = e.target.result;
+                    vistaPreviaNombre.textContent = archivo.name;
+                    vistaPreviaTamano.textContent = formatearBytes(archivo.size);
+                    vistaPrevia.style.display = 'flex';
+                    label.textContent = 'Cambiar archivo';
+                };
+                reader.readAsDataURL(archivo);
+            }
+
+            function ocultarVistaPrevia() {
+                input.value = '';
+                vistaPreviaImg.src = '';
+                vistaPreviaNombre.textContent = '';
+                vistaPreviaTamano.textContent = '';
+                vistaPrevia.style.display = 'none';
+                label.textContent = 'Elegir archivo';
+            }
+
+            input.addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    mostrarArchivo(this.files[0]);
+                } else {
+                    ocultarVistaPrevia();
+                }
+            });
+
+            botonQuitar.addEventListener('click', function() {
+                ocultarVistaPrevia();
+            });
+
+            // Drag & Drop
+            ['dragenter', 'dragover'].forEach(eventName => {
+                form.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    form.classList.add('arrastrando');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                form.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    form.classList.remove('arrastrando');
+                });
+            });
+
+            form.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                if (dt && dt.files && dt.files.length > 0) {
+                    input.files = dt.files;
+                    mostrarArchivo(dt.files[0]);
+                }
+            });
+        })();
+    </script>
 </body>
 </html>
